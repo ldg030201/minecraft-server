@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  minecraft:
+    image: itzg/minecraft-server:java11
+    container_name: mc-ms
+    ports:
+      - "25565:25565"
+    environment:
+      EULA: "TRUE"
+      TYPE: "FORGE"
+      VERSION: "1.16.5"
+      FORGE_VERSION: "36.2.39"
+      MEMORY: "6G"
+      TZ: "Asia/Seoul"
+    tty: true
+    stdin_open: true
+    volumes:
+      - mc-data:/data
+      - ./user/mods:/mods:ro
+
+volumes:
+  mc-data:
