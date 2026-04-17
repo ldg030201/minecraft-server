@@ -2,10 +2,12 @@
 
 ## 프로젝트 개요
 
-Docker 기반 마인크래프트 RPG 서버를 운영하기 위한 프로젝트. 이 레포는 **인프라(docker-compose) + Spring Boot 관리 대시보드**를 담당한다.
+Docker 기반 마인크래프트 RPG 서버를 운영하기 위한 프로젝트. 이 레포는 **인프라(docker-compose) + Spring Boot 관리 대시보드 (teg-admin)**를 담당한다.
+
+서버는 **Arclight NeoForge 1.21.1 하이브리드**로 동작한다. 즉, NeoForge 모드와 Bukkit 플러그인을 동시에 구동할 수 있다.
 
 관련 프로젝트:
-- **minecraft-server-side-mod** (별도 레포): Forge 1.16.5 서버사이드 RPG 모드
+- **minecraft-server-side-mod** (별도 레포): 원래 Forge 1.16.5 서버사이드 RPG 모드였음. **앞으로 자체 개발은 Bukkit 플러그인 방향으로 전환** (하이브리드라 둘 다 가능하지만, 플러그인이 핫리로드·생태계·개발 편의성에서 유리).
 
 개발은 내가 하고, 서버는 친구 컴퓨터에서 Docker로 돌아간다. 친구 PC는 항상 켜져 있지 않고, 플레이할 때만 서버를 켠다.
 
@@ -13,36 +15,11 @@ Docker 기반 마인크래프트 RPG 서버를 운영하기 위한 프로젝트.
 
 https://github.com/ldg030201/minecraft-server
 
-기존 docker-compose.yml (업데이트 전):
-```yaml
-version: "3.8"
-services:
-  minecraft:
-    image: itzg/minecraft-server:java11
-    container_name: mc-ms
-    ports:
-      - "25565:25565"
-    environment:
-      EULA: "TRUE"
-      TYPE: "FORGE"
-      VERSION: "1.16.5"
-      FORGE_VERSION: "36.2.39"
-      MEMORY: "6G"
-      TZ: "Asia/Seoul"
-    tty: true
-    stdin_open: true
-    volumes:
-      - mc-data:/data
-      - ./user/mods:/mods:ro
-volumes:
-  mc-data:
-```
-
 ## 서버 성격
 
 - RPG 서버 (PvE 중심, 전투/던전 컨텐츠)
 - 소규모: 친구들끼리 ~10명
-- 기존에 전투/PvP 관련 모드들이 설치되어 있음
+- 모드 + 플러그인 혼합 사용 (Arclight 하이브리드)
 - 친구 PC가 항상 켜져 있지 않음 → 플레이할 때만 실행
 
 ---
@@ -65,7 +42,7 @@ volumes:
 | 상황 | 동작 |
 |------|------|
 | 친구가 PC 켜고 bat 실행 | 두 이미지 다 최신 확인, 최신 버전으로 시작 |
-| 모드만 수정 후 push | 마크 서버 이미지만 새로 빌드/push, 다음 시작 시 적용 |
+| 모드/플러그인만 수정 후 push | 마크 서버 이미지만 새로 빌드/push, 다음 시작 시 적용 |
 | Spring Boot만 수정 후 push | 대시보드 이미지만 새로 빌드/push, 다음 시작 시 적용 |
 | 둘 다 수정 후 push | 둘 다 새로 빌드/push, 다음 시작 시 둘 다 업데이트 |
 | 플레이 중 대시보드만 급히 업데이트 | 대시보드에서 "업데이트 적용" 버튼 → `teg-admin`만 재시작 |
@@ -85,14 +62,14 @@ minecraft-server/
 ├── .env                          # RCON 비밀번호 등 (gitignore)
 ├── start-server.bat             # 서버 시작 (pull + up)
 ├── stop-server.bat              # 서버 종료 (down)
-└── user/
-    └── mods/                    # 기존 외부 모드 파일들 (유지)
+├── user/
+│   └── mods/                    # NeoForge 모드 jar (CustomNPCs, ArmourersWorkshop 등)
+└── plugin/                      # Bukkit 플러그인 jar (RPGItems 등, 내가 개발할 자체 플러그인)
 ```
 
 ### 친구 PC의 docker-compose.yml
 
 ```yaml
-version: "3.8"
 services:
   minecraft:
     image: ghcr.io/ldg030201/mc-server:latest
@@ -103,9 +80,9 @@ services:
       - "25575:25575"
     environment:
       EULA: "TRUE"
-      TYPE: "FORGE"
-      VERSION: "1.16.5"
-      FORGE_VERSION: "36.2.39"
+      TYPE: "ARCLIGHT"
+      ARCLIGHT_TYPE: "NEOFORGE"
+      VERSION: "1.21.1"
       MEMORY: "6G"
       TZ: "Asia/Seoul"
       ENABLE_RCON: "true"
@@ -116,6 +93,7 @@ services:
     volumes:
       - mc-data:/data
       - ./user/mods:/mods:ro
+      - ./plugin:/plugins:ro
 
   teg-admin:
     image: ghcr.io/ldg030201/teg-admin:latest
@@ -165,12 +143,33 @@ pause
 
 ---
 
+## 외부 모드 / 플러그인 (NeoForge 1.21.1)
+
+`user/mods/` 폴더에 넣는 NeoForge 모드 jar:
+
+| 모드 | 다운로드 |
+|------|---------|
+| **CustomNPCs-Unofficial** (NeoForge 1.21.1) | https://modrinth.com/mod/customnpcs-unofficial/version/NeoForge-1.21.1.20241226 |
+| **Armourer's Workshop** (Forge/NeoForge 1.21.1) | https://modrinth.com/mod/armourers-workshop/version/forge-1.21.1-3.2.3-beta |
+
+`plugin/` 폴더에 넣는 Bukkit 플러그인 jar:
+
+| 플러그인 | 다운로드 |
+|---------|---------|
+| **RPGItems-Reloaded** (1.21.1) | https://modrinth.com/plugin/rpgitems-reloaded (1.21.1 빌드 확인 후 배치) |
+
+> **주의**: Armourer's Workshop 1.21.1은 beta. CustomNPCs NeoForge 빌드도 2024-12 이후 업데이트 중단 상태 → 플레이 중 이슈 발생 시 해당 Discord 확인.
+
+---
+
 ## Spring Boot 앱 (teg-admin)
 
 ### 기술 스택
-- Spring Boot 3.x (Java 17+)
+- **Java 21** (Virtual Threads, Pattern Matching 등 학습 목적으로 최신)
+- Spring Boot 3.3.5 (Java 21 완전 지원)
 - Docker로 컨테이너화 (이 레포에 Dockerfile 포함)
-- 프론트엔드: Thymeleaf 또는 React
+- Gradle 8.7
+- 프론트엔드: Thymeleaf + 바닐라 JS
 
 ### 구현할 기능
 
@@ -186,7 +185,7 @@ pause
 - 플레이어 밴/언밴
 - 아이템 지급 (/give)
 - 커스텀 명령어 입력창
-- 구현 방법: RCON 프로토콜 (TCP 25575), `rkon-core` 라이브러리
+- 구현 방법: RCON 프로토콜 (TCP 25575), `minecraft-rcon-client` 라이브러리
 
 #### 서버 컨테이너 제어
 - 웹 UI 버튼으로 마크 서버 컨테이너 on/off/restart
@@ -203,12 +202,12 @@ pause
 4. `docker compose pull minecraft` → `docker compose up -d minecraft`
 5. 시작 완료 감지 후 Discord 웹훅 등으로 재개 알림
 
-#### 플레이어 관리 (모드 연동)
+#### 플레이어 관리 (플러그인 연동)
 - 플레이어별 레벨, 직업, 장비 현황 조회
 - 접속 기록 (접속/퇴장 시간, 플레이타임)
 - 랭킹 (레벨, 보스 킬 수, 총 데미지 등)
 - 던전 클리어 기록/통계
-- 구현 방법: 마크 서버 볼륨(`mc-data`)을 읽기 전용으로 마운트해서 모드의 JSON 데이터 직접 읽기
+- 구현 방법: 마크 서버 볼륨(`mc-data`)을 읽기 전용으로 마운트해서 자체 Bukkit 플러그인이 저장한 JSON/YAML 데이터 직접 읽기
 
 #### 웹 대시보드 UI
 - 메인 페이지: 서버 상태 + 접속자 + 요약 통계
@@ -218,11 +217,13 @@ pause
 
 ### 플레이어 데이터 읽기 경로
 
-모드가 저장한 데이터를 `teg-admin`에서 읽는다:
-- 플레이어 데이터: `/mc-data/world/data/rpg/players/*.json`
-- 이벤트 로그: `/mc-data/world/data/rpg/logs/YYYY-MM-DD.json`
+내가 개발할 Bukkit 플러그인이 저장한 데이터를 `teg-admin`에서 읽는다. Bukkit 플러그인 기본 경로:
 
-형식은 **minecraft-server-side-mod 프로젝트의 CLAUDE.md**에 정의되어 있음. 변경 시 양쪽 동기화 필요.
+- 플러그인 데이터 폴더: `/mc-data/plugins/<PluginName>/`
+- 플레이어 데이터 예시: `/mc-data/plugins/TegRPG/players/<UUID>.yml`
+- 이벤트 로그 예시: `/mc-data/plugins/TegRPG/logs/YYYY-MM-DD.log`
+
+구체 포맷은 플러그인 개발 시 정의하고 양쪽 동기화.
 
 ---
 
@@ -230,7 +231,7 @@ pause
 
 ### teg-admin 이미지 빌드 (이 레포)
 
-`.github/workflows/build-admin.yml`:
+`.github/workflows/build-admin.yml` — GitHub Actions가 Java 21로 빌드 후 GHCR에 푸시한다.
 
 ```yaml
 name: Build and Push teg-admin
@@ -239,6 +240,10 @@ on:
     branches: [main]
     paths:
       - 'teg-admin/**'
+      - 'settings.gradle'
+      - 'gradle/**'
+      - 'gradlew'
+      - 'gradlew.bat'
       - '.github/workflows/build-admin.yml'
 
 jobs:
@@ -250,15 +255,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
 
       - name: Build with Gradle
-        working-directory: ./teg-admin
-        run: ./gradlew build -x test
+        run: |
+          chmod +x ./gradlew
+          ./gradlew :teg-admin:build -x test
 
       - name: Login to GHCR
         uses: docker/login-action@v3
@@ -270,16 +276,15 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
-          context: ./teg-admin
+          context: .
+          file: ./teg-admin/Dockerfile
           push: true
           tags: ghcr.io/ldg030201/teg-admin:latest
 ```
 
 ### mc-server 이미지 빌드
 
-모드 레포(`minecraft-server-side-mod`)에서 jar 빌드 후, 그 레포의 워크플로우가 커스텀 MC 서버 이미지까지 빌드해서 GHCR에 push한다. 이 이미지는 `itzg/minecraft-server:java11`을 베이스로 하고 모드 jar를 포함한다.
-
-상세 내용은 모드 레포의 CLAUDE.md 참고.
+향후 자체 플러그인 레포(`minecraft-server-side-mod` 또는 새 플러그인 레포)에서 jar 빌드 후, 그 레포의 워크플로우가 커스텀 MC 서버 이미지까지 빌드해서 GHCR에 push한다. 이 이미지는 `itzg/minecraft-server:java21`을 베이스로 하고 자체 플러그인 jar를 포함한다.
 
 ---
 
@@ -292,35 +297,50 @@ minecraft-server/
 ├── start-server.bat             # 서버 시작 bat
 ├── stop-server.bat              # 서버 종료 bat
 ├── .env.example                 # 환경변수 템플릿
+├── settings.gradle              # Gradle 멀티 모듈 루트
+├── gradlew / gradle/wrapper/    # Gradle wrapper (8.7)
 ├── .github/
 │   └── workflows/
-│       └── build-admin.yml      # teg-admin 이미지 빌드/푸시
-├── teg-admin/                    # Spring Boot 프로젝트 (teg-admin)
+│       └── build-admin.yml      # teg-admin 이미지 빌드/푸시 (Java 21)
+├── teg-admin/                   # Spring Boot 프로젝트 (teg-admin, Java 21)
 │   ├── Dockerfile
 │   ├── build.gradle
 │   ├── src/
 │   └── ...
-└── user/
-    └── mods/                    # 기존 외부 모드 파일들
+├── user/
+│   └── mods/                    # NeoForge 모드 jar
+└── plugin/                      # Bukkit 플러그인 jar
 ```
 
 ---
 
 ## 개발 우선순위
 
-1. **Spring Boot 기본 세팅** — 프로젝트 초기화, Dockerfile
-2. **RCON 연동** — rkon-core로 명령어 실행, 서버 상태 조회
-3. **Docker 컨테이너 제어** — Docker Java Client로 start/stop/restart
-4. **웹 대시보드 UI** — 메인 페이지 (서버 상태 + RCON 콘솔 + 제어 버튼)
-5. **CI/CD 파이프라인** — GitHub Actions + GHCR
-6. **docker-compose.yml + bat 파일 작성**
-7. **모드 연동** — 모드 프로젝트 완성 후, JSON 데이터 읽어서 대시보드 표시
-8. **업데이트 적용 버튼** — 서비스별 개별 업데이트 + 재시작 플로우
+1. **Spring Boot 기본 세팅** — 프로젝트 초기화, Dockerfile (✅ 완료)
+2. **RCON 연동** — minecraft-rcon-client로 명령어 실행, 서버 상태 조회 (✅ 완료)
+3. **Docker 컨테이너 제어** — Docker Java Client로 start/stop/restart (✅ 완료)
+4. **웹 대시보드 UI** — 메인 페이지 (서버 상태 + RCON 콘솔 + 제어 버튼) (✅ 완료)
+5. **CI/CD 파이프라인** — GitHub Actions + GHCR (✅ 완료)
+6. **docker-compose.yml + bat 파일 작성** (✅ 완료)
+7. **1.21.1 / Arclight NeoForge 하이브리드 전환** (✅ 완료)
+8. **Bukkit 플러그인 개발** — RPG 시스템(레벨·직업·데이터 저장)을 자체 플러그인으로 구현
+9. **플러그인 데이터 대시보드 연동** — 플러그인이 저장한 JSON/YAML을 teg-admin에서 읽어 표시
+10. **업데이트 적용 버튼** — 서비스별 개별 업데이트 + 재시작 플로우
+
+---
+
+## 주요 변경 이력
+
+- **2026-04-17**: 1.16.5 Forge → **1.21.1 Arclight NeoForge 하이브리드**로 업그레이드. teg-admin Java 17 → **Java 21**. 개발 방향을 "서버사이드 모드"에서 "Bukkit 플러그인"으로 전환.
 
 ---
 
 ## 참고
 
 - Docker Java Client: https://github.com/docker-java/docker-java
-- RCON 라이브러리: https://github.com/Kronos666/rkon-core
+- RCON 라이브러리: https://github.com/t9t/minecraft-rcon-client
 - itzg/minecraft-server 이미지: https://github.com/itzg/docker-minecraft-server
+- itzg 하이브리드 서버 문서: https://docker-minecraft-server.readthedocs.io/en/latest/types-and-platforms/server-types/hybrids/
+- Arclight: https://arclight.izzel.io/
+- NeoForge: https://neoforged.net/
+- Bukkit Plugin 개발: https://docs.papermc.io/paper/dev/

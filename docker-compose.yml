@@ -8,9 +8,9 @@ services:
       - "25575:25575"
     environment:
       EULA: "TRUE"
-      TYPE: "FORGE"
-      VERSION: "1.16.5"
-      FORGE_VERSION: "36.2.39"
+      TYPE: "ARCLIGHT"
+      ARCLIGHT_TYPE: "NEOFORGE"
+      VERSION: "1.21.1"
       MEMORY: "6G"
       TZ: "Asia/Seoul"
       ENABLE_RCON: "true"
@@ -21,6 +21,7 @@ services:
     volumes:
       - mc-data:/data
       - ./user/mods:/mods:ro
+      - ./plugin:/plugins:ro
 
   teg-admin:
     image: ${TEG_ADMIN_IMAGE:-ghcr.io/ldg030201/teg-admin:latest}

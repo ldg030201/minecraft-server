@@ -14,6 +14,7 @@ data
 world/
 logs/
 crash-reports/
+# user/mods/*.jar, plugin/*.jar 는 일부러 추적한다 (친구 PC에 배포되어야 함)
 
 # 환경 변수
 .env
