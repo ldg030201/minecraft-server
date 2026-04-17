@@ -1,5 +1,41 @@
-#개발 환경 제외
+# 개발 환경 제외
 .idea
+*.iml
+.claude/
 
-#마인크래프트 정보 제외
+# OS 생성 파일
+*.log
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# 마인크래프트 서버 데이터
 data
+user/mods/*.jar
+world/
+logs/
+crash-reports/
+
+# 환경 변수
+.env
+
+# 로컬 개발용 compose override
+docker-compose.override.yml
+
+# Java / Spring Boot
+hs_err_pid*
+
+# Gradle
+**/.gradle/
+**/build/
+*.class
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+
+# 민감 파일 방어 (실수 방지)
+*.pem
+*.key
+*.p12
+*.jks
+credentials*
+secret*

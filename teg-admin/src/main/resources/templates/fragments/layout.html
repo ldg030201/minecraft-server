@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title}">TEG Admin</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<nav th:fragment="nav">
+    <div class="nav-container">
+        <a href="/" class="nav-brand">TEG Admin</a>
+        <div class="nav-links">
+            <a href="/" class="nav-link">대시보드</a>
+        </div>
+    </div>
+</nav>
+
+<footer th:fragment="footer">
+    <div class="footer-container">
+        <p>TEG Admin 대시보드</p>
+    </div>
+</footer>
+
+</body>
+</html>

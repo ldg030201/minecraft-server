@@ -1,1 +1,0 @@
-docker exec -it mc-ms rcon-cli

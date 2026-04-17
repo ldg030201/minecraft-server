@@ -1,0 +1,19 @@
+server:
+  port: 8080
+
+rcon:
+  host: ${RCON_HOST:localhost}
+  port: ${RCON_PORT:25575}
+  password: ${RCON_PASSWORD:minecraft}
+
+docker:
+  host: ${DOCKER_HOST:}
+
+mc:
+  container-name: ${MC_CONTAINER_NAME:mc-ms}
+  data-path: ${MC_DATA_PATH:/mc-data}
+  compose-path: ${MC_COMPOSE_PATH:}
+
+spring:
+  thymeleaf:
+    cache: false
