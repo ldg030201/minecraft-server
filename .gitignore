@@ -11,16 +11,12 @@ Desktop.ini
 
 # 마인크래프트 서버 데이터
 data
-user/mods/*.jar
 world/
 logs/
 crash-reports/
 
 # 환경 변수
 .env
-
-# 로컬 개발용 compose override
-docker-compose.override.yml
 
 # Java / Spring Boot
 hs_err_pid*

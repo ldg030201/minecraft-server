@@ -34,12 +34,14 @@
     <!-- 접속 중인 플레이어 -->
     <section class="card">
         <h2 class="card-title">접속 중인 플레이어</h2>
-        <div th:if="${#lists.isEmpty(players)}" class="empty-state">
-            접속 중인 플레이어가 없습니다
+        <div id="player-list-container">
+            <div th:if="${#lists.isEmpty(players)}" class="empty-state">
+                접속 중인 플레이어가 없습니다
+            </div>
+            <ul th:unless="${#lists.isEmpty(players)}" class="player-list">
+                <li th:each="player : ${players}" class="player-item" th:text="${player}"></li>
+            </ul>
         </div>
-        <ul th:unless="${#lists.isEmpty(players)}" class="player-list">
-            <li th:each="player : ${players}" class="player-item" th:text="${player}"></li>
-        </ul>
     </section>
 
     <!-- 서버 제어 -->
@@ -53,16 +55,6 @@
         <div id="control-message" class="control-message"></div>
     </section>
 
-    <!-- 서버 로그 -->
-    <section class="card">
-        <h2 class="card-title">서버 로그</h2>
-        <div id="server-log-output" class="console-output"></div>
-        <div class="log-controls">
-            <button id="btn-log-connect" class="btn btn-primary" onclick="toggleLogStream()">로그 연결</button>
-            <button class="btn btn-secondary" onclick="clearLogs()">로그 지우기</button>
-        </div>
-    </section>
-
     <!-- RCON 콘솔 -->
     <section class="card">
         <h2 class="card-title">RCON 콘솔</h2>
@@ -72,6 +64,16 @@
                    placeholder="명령어를 입력하세요..." autocomplete="off">
             <button type="submit" class="btn btn-primary">전송</button>
         </form>
+    </section>
+
+    <!-- 서버 로그 -->
+    <section class="card">
+        <h2 class="card-title">서버 로그</h2>
+        <div id="server-log-output" class="console-output"></div>
+        <div class="log-controls">
+            <button id="btn-log-connect" class="btn btn-primary" onclick="toggleLogStream()">로그 연결</button>
+            <button class="btn btn-secondary" onclick="clearLogs()">로그 지우기</button>
+        </div>
     </section>
 </main>
 

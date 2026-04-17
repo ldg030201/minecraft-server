@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 @Service
 public class DockerService {
@@ -32,6 +33,11 @@ public class DockerService {
     private final String composePath;
 
     private volatile boolean startInProgress = false;
+
+    private static final Pattern ANSI_ESCAPE = Pattern.compile("\\x1B\\[[;\\d]*[ -/]*[@-~]");
+    private static final Pattern RCON_PROMPT = Pattern.compile("^>\\.*\\s*$");
+    private static final Pattern RCON_CONNECT_SPAM = Pattern.compile(
+            "\\[RCON (?:Listener|Client /[^\\]]+)[^\\]]*/INFO\\].*(?:started|shutting down)\\s*$");
 
     public DockerService(DockerClient dockerClient,
                          @Value("${mc.container-name:mc-ms}") String containerName,
@@ -172,11 +178,31 @@ public class DockerService {
         }
 
         ResultCallback.Adapter<Frame> callback = new ResultCallback.Adapter<>() {
+            private final StringBuilder buffer = new StringBuilder();
+
             @Override
             public void onNext(Frame frame) {
                 try {
-                    String line = new String(frame.getPayload(), StandardCharsets.UTF_8).stripTrailing();
-                    if (!line.isEmpty()) {
+                    buffer.append(new String(frame.getPayload(), StandardCharsets.UTF_8));
+
+                    int lastBreak = -1;
+                    for (int i = buffer.length() - 1; i >= 0; i--) {
+                        char c = buffer.charAt(i);
+                        if (c == '\n' || c == '\r') {
+                            lastBreak = i;
+                            break;
+                        }
+                    }
+                    if (lastBreak < 0) return;
+
+                    String complete = buffer.substring(0, lastBreak + 1);
+                    buffer.delete(0, lastBreak + 1);
+
+                    for (String rawLine : complete.split("[\\r\\n]+")) {
+                        String line = ANSI_ESCAPE.matcher(rawLine).replaceAll("").stripTrailing();
+                        if (line.isEmpty()) continue;
+                        if (RCON_PROMPT.matcher(line).matches()) continue;
+                        if (RCON_CONNECT_SPAM.matcher(line).find()) continue;
                         emitter.send(SseEmitter.event().data(line));
                     }
                 } catch (IOException e) {

@@ -1,7 +1,7 @@
 services:
   minecraft:
-    image: ghcr.io/ldg030201/mc-server:latest
-    pull_policy: always
+    image: ${MC_IMAGE:-ghcr.io/ldg030201/mc-server:latest}
+    pull_policy: ${MC_PULL:-always}
     container_name: mc-ms
     ports:
       - "25565:25565"
@@ -23,8 +23,11 @@ services:
       - ./user/mods:/mods:ro
 
   teg-admin:
-    image: ghcr.io/ldg030201/teg-admin:latest
-    pull_policy: always
+    image: ${TEG_ADMIN_IMAGE:-ghcr.io/ldg030201/teg-admin:latest}
+    pull_policy: ${TEG_ADMIN_PULL:-always}
+    build:
+      context: .
+      dockerfile: teg-admin/Dockerfile
     container_name: teg-admin
     ports:
       - "8080:8080"

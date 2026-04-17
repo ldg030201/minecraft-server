@@ -72,6 +72,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     values[2].textContent = status.playerCount || '0';
                 }
 
+                renderPlayerList(status.players || []);
+
                 // 컨테이너가 생성 완료되어 running 상태가 되면 자동으로 로그 연결
                 if (previousContainerState !== 'running' && status.containerState === 'running' && !eventSource) {
                     toggleLogStream();
@@ -83,6 +85,25 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     }
 
+    function renderPlayerList(players) {
+        var container = document.getElementById('player-list-container');
+        if (!container) return;
+        if (!players || players.length === 0) {
+            container.innerHTML = '<div class="empty-state">접속 중인 플레이어가 없습니다</div>';
+            return;
+        }
+        var ul = document.createElement('ul');
+        ul.className = 'player-list';
+        players.forEach(function (name) {
+            var li = document.createElement('li');
+            li.className = 'player-item';
+            li.textContent = name;
+            ul.appendChild(li);
+        });
+        container.innerHTML = '';
+        container.appendChild(ul);
+    }
+
     function startFastPolling() {
         stopPolling();
         pollInterval = setInterval(refreshStatus, 3000);
@@ -90,7 +111,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function startNormalPolling() {
         stopPolling();
-        pollInterval = setInterval(refreshStatus, 10000);
+        pollInterval = setInterval(refreshStatus, 5000);
     }
 
     function stopPolling() {
